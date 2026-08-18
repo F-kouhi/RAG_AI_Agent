@@ -10,6 +10,7 @@ venv/
 env/
 rag_agent/
 local_models/
+rag_venv/
 __pycache__/
 
 # پوشه داده‌ها و فایل‌های دیتابیس
