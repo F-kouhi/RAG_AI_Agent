@@ -12,20 +12,34 @@ API_KEY = os.getenv('EMBEDDING_API_KEY')
 
 
 class Embedder:
-
-
-    def __init__(self,embedder_type:str='api', model_name: str = "intfloat/multilingual-e5-small",device: str = 'cpu', model_name_api:str='text-embedding-3-small',base_url:str='https://api.gapgpt.app/v1',api_key:str=API_KEY):
-        self.embedder_type=embedder_type
-        if self.embedder_type!='api':
+    def __init__(
+        self,
+        embedder_type: str = 'local',
+        # مسیر پوشه محلی که مدل را در مرحله قبل در آن ذخیره کردیم
+        local_model_path: str = "./local_models/multilingual-e5-small", 
+        device: str = 'cpu',
+        model_name_api: str = 'text-embedding-3-small',
+        base_url: str = 'https://api.gapgpt.app/v1',
+        api_key: str = API_KEY
+    ):
+        self.embedder_type = embedder_type
+        if self.embedder_type == 'api':
+            self.model_name = model_name_api
+            self.client = OpenAI(
+                base_url=base_url,
+                api_key=api_key
+            )
+        else:
             self.device = device
-            self.model= SentenceTransformer(model_name,device=device)
-            print(f"[Embedder] Model loaded on {self.device}")
+            # لود مدل به صورت کاملاً آفلاین بدون اتصال به اینترنت
+            self.model = SentenceTransformer(
+                local_model_path, 
+                device=device, 
+                local_files_only=True
+            )
+            print(f"[Embedder] Local model loaded from {local_model_path} on {self.device}")
 
-        self.model_name = model_name_api
-        self.client = OpenAI(
-            base_url=base_url,
-            api_key=api_key
-        )
+        
 
         
 
@@ -92,3 +106,26 @@ class Embedder:
         embedding = response.data[0].embedding
         
         return np.array(embedding)
+
+
+
+# # بخش تست آفلاین بودن مدل امبدینگ( در صورت نیاز از کامنت دربیارید)
+# if __name__ == "__main__":
+#     # تست لود کاملا آفلاین مدل از پوشه محلی
+#     try:
+#         print("در حال تست لود آفلاین مدل...")
+#         embedder = Embedder(
+#             embedder_type='local',
+#             local_model_path="./local_models/multilingual-e5-small"
+#         )
+        
+#         # تست تولید امبدینگ
+#         test_text = ["سلام دنیا"]
+#         vector = embedder.embed_text(test_text)
+        
+#         print("✅ تست موفقیت‌آمیز بود!")
+#         print(f"ابعاد بردار امبدینگ: {vector.shape}")
+        
+#     except Exception as e:
+#         print(f"❌ خطا در اجرای آفلاین: {e}")
+
